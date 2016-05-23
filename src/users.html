@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<link rel="stylesheet" href="/node_modules/bulma/css/bulma.min.css" />
+        <link rel="stylesheet" href="/src/css/main.css" />
+	</head>
+	<body>
+        <section class="hero is-fullheight is-light is-bold">
+			<div class="hero-head">
+				<header class="nav">
+			      <div class="container">
+			        <div class="nav-left">
+
+			        </div>
+			        <span class="nav-toggle">
+			          <span></span>
+			          <span></span>
+			          <span></span>
+			        </span>
+			        <div class="nav-right nav-menu">
+			          <a href="/index.html" class="nav-item">
+			            Home
+			          </a>
+			          <a href="#" class="nav-item is-active">
+			            Users
+			          </a>
+			        </div>
+			      </div>
+			    </header>
+			</div>
+            <div class="hero-body">
+                <div class="container">
+                    <div class="columns">
+                        <div class="column">
+                            <label class="label">Diibear Center List</label>
+                            <p class="control">
+                                <span class="select">
+                                    <select id="centers">
+                                        <option value="-1"></option>
+                                    </select>
+                                </span>
+                            <p>
+                            <p class="bottom-spacing">
+                                <span class="tag is-info is-large" id="diibearTag">0</span>
+                            </p>
+                            <table id="tableDiibear" class="table is-striped">
+                                <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>name</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                        <div class="column">
+                            <label class="label">Diilight Center List</label>
+                            <p class="control">
+                                <span class="select">
+                                <select id="centersDiilight">
+                                    <option value="-1"></option>
+                                </select>
+                            <p>
+                            <p class="bottom-spacing">
+                                <span class="tag is-info is-large" id="diilightTag">0</span>
+                            </p>
+                            <table id="tableDiilight" class="table is-striped">
+                                <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>name</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div id="p">
+        </div>
+        <script type="text/javascript" src="/src/js/zepto.min.js"></script>
+        <script type="text/javascript" src="/src/js/spin.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                var opts = {
+                  lines: 12 // The number of lines to draw
+                , length: 18 // The length of each line
+                , width: 14 // The line thickness
+                , radius: 42 // The radius of the inner circle
+                , scale: 0.75 // Scales overall size of the spinner
+                , corners: 1 // Corner roundness (0..1)
+                , color: '#000' // #rgb or #rrggbb or array of colors
+                , opacity: 0.25 // Opacity of the lines
+                , rotate: 0 // The rotation offset
+                , direction: 1 // 1: clockwise, -1: counterclockwise
+                , speed: 1 // Rounds per second
+                , trail: 60 // Afterglow percentage
+                , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+                , zIndex: 2e9 // The z-index (defaults to 2000000000)
+                , className: 'spinner' // The CSS class to assign to the spinner
+                , top: '50%' // Top position relative to parent
+                , left: '50%' // Left position relative to parent
+                , shadow: false // Whether to render a shadow
+                , hwaccel: false // Whether to use hardware acceleration
+                , position: 'absolute' // Element positioning
+                }
+                var target = document.getElementById('p');
+                var spinner = new Spinner(opts).spin(target);
+                window.spinner = spinner;
+                $.get("http://v2.taidii.sg/api/analysis/0/centers/", function(data, status, xhr){
+                    var centersSelect = $("#centers");
+                    $(data.centers).each(function(index, item){
+                        centersSelect.append('<option value="' + item.id + '">' + item.name +'</option>');
+                    });
+                    spinner.stop();
+                });
+                $.get("http://v2.taidii.sg/api/analysis/1/centers/", function(data, status, xhr){
+                    var centersSelect = $("#centersDiilight");
+                    $(data.centers).each(function(index, item){
+                        centersSelect.append('<option value="' + item.id + '">' + item.name +'</option>');
+                    });
+                });
+            })
+            $("#centers").on("change", function(ele){
+                var target = document.getElementById('p');
+                var diibearTag = $("#diibearTag");
+                diibearTag.text("0");
+                window.spinner.spin(target);
+                var tableDiibear = $("#tableDiibear");
+                var selectedId = ele.target.selectedOptions[0].value;
+                if (selectedId == -1) {
+                    diibearTag.text("0");
+                    window.spinner.stop();
+                    tableDiibear.empty();
+                    tableDiibear.append("<thead><tr><th>id</th><th>name</th></tr></thead>");
+                    return;
+                }
+                var url = "http://v2.taidii.sg/api/analysis/0/"+selectedId+"/users/";
+
+                $.get(url, function(data, status, xhr){
+                    window.spinner.stop();
+                    tableDiibear.empty();
+                    tableDiibear.append("<thead><tr><th>id</th><th>name</th></tr></thead>");
+                    var userCount = 0;
+                    $(data.users).each(function(index, item){
+                        userCount++;
+                        tableDiibear.append('<tbody>');
+                        tableDiibear.append('<tr><td>'+item.id+'</td><td>'+item.name+'</td></tr>');
+                        tableDiibear.append('</tbody>');
+                    });
+                    diibearTag.text(userCount);
+                })
+            })
+        </script>
+        <script type="text/javascript">
+            $("#centersDiilight").on("change", function(ele){
+                var target = document.getElementById('p');
+                var diilightTag = $("#diilightTag");
+                diilightTag.text("0");
+                window.spinner.spin(target);
+                var tableDiilight = $("#tableDiilight");
+                var selectedId = ele.target.selectedOptions[0].value;
+                if (selectedId == -1) {
+                    window.spinner.stop();
+                    diilightTag.text(0);
+                    tableDiilight.empty();
+                    tableDiilight.append("<thead><tr><th>id</th><th>name</th></tr></thead>");
+                    return;
+                }
+                var url = "http://v2.taidii.sg/api/analysis/1/"+selectedId+"/users/";
+
+                $.get(url, function(data, status, xhr){
+                    window.spinner.stop();
+                    tableDiilight.empty();
+                    tableDiilight.append("<thead><tr><th>id</th><th>name</th></tr></thead>");
+                    var userCount = 0;
+                    $(data.users).each(function(index, item){
+                        userCount++;
+                        tableDiilight.append('<tbody>');
+                        tableDiilight.append('<tr><td>'+item.id+'</td><td>'+item.name+'</td></tr>');
+                        tableDiilight.append('</tbody>');
+                    });
+                    diilightTag.text(userCount);
+                })
+            })
+        </script>
+    </body>
+</html>
